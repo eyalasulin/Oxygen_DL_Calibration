@@ -90,8 +90,7 @@ if __name__ == '__main__':
         database_x[i * batches: (i + 1) * batches] = data_x
         database_y[i * batches: (i + 1) * batches] = data_y
     x_train, y_train, x_val, y_val = train_test_split(database_x, database_y, test_size=0.33, random_state=42)
-    a=2
-    # x_train, y_train, x_val, y_val = split_train_val(database)
+
     # net = build_net(batch)
     # net.train(x_train, y_train)
     # net.evalute_acc(x_val, y_val)
