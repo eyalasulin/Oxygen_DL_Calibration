@@ -6,6 +6,7 @@ import os
 from sklearn.model_selection import train_test_split
 import basic_arch
 
+
 def load_meas(master_dir, subdir, file_name, debug=True):
     meas = import_module(f'{master_dir}.{subdir}.{file_name}')
     red = getattr(meas, "red")
@@ -60,11 +61,11 @@ def plot_graph(red, blue):
 
 
 def split_to_batches(red, blue, spo2, batches_num):
-    db_x = np.zeros((batches_num, channels, signal_len // batches_num))
+    db_x = np.zeros((batches_num, signal_len // batches_num, channels))
     db_y = np.full(batches_num, spo2)
     for batch in range(batches_num):
-        db_x[batch, 0] = red[(signal_len // batches_num) * batch:(signal_len // batches_num) * (batch + 1)]
-        db_x[batch, 1] = blue[(signal_len // batches_num) * batch:(signal_len // batches_num) * (batch + 1)]
+        db_x[batch, :, 0] = red[(signal_len // batches_num) * batch:(signal_len // batches_num) * (batch + 1)]
+        db_x[batch, :, 1] = blue[(signal_len // batches_num) * batch:(signal_len // batches_num) * (batch + 1)]
     return db_x, db_y
 
 
@@ -78,7 +79,7 @@ if __name__ == '__main__':
     measurements_subdir = 'RAW_100X100'
     meas_names = os.listdir(f'{measurements_dir}/{measurements_subdir}')
     meas_names = [file[:-3] for file in meas_names if file[-2:] == "py"]
-    database_x = np.zeros(shape=(batches * len(meas_names), channels, signal_len // batches))
+    database_x = np.zeros(shape=(batches * len(meas_names), signal_len // batches, channels))
     database_y = np.zeros(shape=(batches * len(meas_names)))
     for i, meas_name in enumerate(meas_names):
         red_array, blue_array, time_points, spo2_g = load_meas(measurements_dir, measurements_subdir, meas_name)
@@ -90,6 +91,9 @@ if __name__ == '__main__':
         database_y[i * batches: (i + 1) * batches] = data_y
     x_train, y_train, x_val, y_val = train_test_split(database_x, database_y, test_size=0.33, random_state=42)
 
+    verbose = True
+    if verbose:
+        print(f'data: {x_train.shape}, {y_train.shape}, {x_val.shape}, {y_val.shape}')
     net = basic_arch.build_net_1(signal_len // batches)
     net.fit(x_train, y_train, epochs=10, batch_size=5)
     print(net.evaluate(x_val, y_val))
