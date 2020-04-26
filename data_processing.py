@@ -3,9 +3,8 @@ import numpy as np
 import scipy.interpolate as interp
 from importlib import import_module
 import os
-
 from sklearn.model_selection import train_test_split
-
+import basic_arch
 
 def load_meas(master_dir, subdir, file_name, debug=True):
     meas = import_module(f'{master_dir}.{subdir}.{file_name}')
@@ -91,6 +90,6 @@ if __name__ == '__main__':
         database_y[i * batches: (i + 1) * batches] = data_y
     x_train, y_train, x_val, y_val = train_test_split(database_x, database_y, test_size=0.33, random_state=42)
 
-    # net = build_net(batch)
-    # net.train(x_train, y_train)
-    # net.evalute_acc(x_val, y_val)
+    net = basic_arch.build_net_1(signal_len // batches)
+    net.fit(x_train, y_train, epochs=10, batch_size=5)
+    print(net.evaluate(x_val, y_val))
