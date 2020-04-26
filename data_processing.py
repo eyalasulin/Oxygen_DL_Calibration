@@ -6,6 +6,12 @@ import os
 from sklearn.model_selection import train_test_split
 import basic_arch
 
+import tensorflow as tf
+
+config = tf.ConfigProto()
+config.gpu_options   .allow_growth = True
+session = tf.InteractiveSession(config=config)
+
 
 def load_meas(master_dir, subdir, file_name, debug=True):
     meas = import_module(f'{master_dir}.{subdir}.{file_name}')
@@ -74,22 +80,23 @@ spaced_time_points = np.arange(0, 30, 1 / 30)
 batches = 5
 signal_len = len(spaced_time_points) - 120 - signal_cut * 2
 channels = 2
+
 if __name__ == '__main__':
     measurements_dir = 'Measurements'
     measurements_subdir = 'RAW_100X100'
     meas_names = os.listdir(f'{measurements_dir}/{measurements_subdir}')
-    meas_names = [file[:-3] for file in meas_names if file[-2:] == "py"]
+    meas_names = [f[:-3] for f in meas_names if f[-2:] == "py"]
     database_x = np.zeros(shape=(batches * len(meas_names), signal_len // batches, channels))
     database_y = np.zeros(shape=(batches * len(meas_names)))
     for i, meas_name in enumerate(meas_names):
         red_array, blue_array, time_points, spo2_g = load_meas(measurements_dir, measurements_subdir, meas_name)
         red_intrp, blue_intrp = interpolate(red_array, blue_array, time_points)
-        # plot_graph(red_intrp, blue_intrp)
+        plot_graph(red_intrp, blue_intrp)
 
         data_x, data_y = split_to_batches(red_intrp, blue_intrp, spo2_g, batches)
         database_x[i * batches: (i + 1) * batches] = data_x
         database_y[i * batches: (i + 1) * batches] = data_y
-    x_train, y_train, x_val, y_val = train_test_split(database_x, database_y, test_size=0.33, random_state=42)
+    x_train, x_val, y_train, y_val = train_test_split(database_x, database_y, test_size=0.33, random_state=42)
 
     verbose = True
     if verbose:
